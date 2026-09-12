@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
 
     private var state by mutableStateOf(RudraState.IDLE)
     private var transcript by mutableStateOf("")
-    private var reply by mutableStateOf("Hey Rudra bolo, ba niche button e chepo.")
+    private var reply by mutableStateOf("Hey Rudra bolo, ya niche button dabao.")
     private var pendingConfirm by mutableStateOf<(suspend () -> RouterOutcome)?>(null)
     private var showSettings by mutableStateOf(false)
 
