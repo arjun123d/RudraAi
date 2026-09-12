@@ -8,13 +8,6 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
-/**
- * Handles free-form conversation + intent understanding for anything
- * CommandParser's keyword matching can't confidently classify (multi-step
- * commands, casual chat, ambiguous phrasing).
- *
- * Using Groq's free API (OpenAI-compatible format) with the Llama 3.3 model.
- */
 object ApiKeyProvider {
     fun get(context: Context): String? {
         val prefs = context.getSharedPreferences("rudra_secure_config", Context.MODE_PRIVATE)
@@ -32,17 +25,17 @@ class AIManager(private val context: Context) {
     private val endpoint = "https://api.groq.com/openai/v1/chat/completions"
 
     private val systemPrompt = """
-        Tumi RUDRA, Arjun-er personal AI voice assistant. Casual, desi, bondhu-shulov
-        tone e Bengali/Banglish e kotha bolo. Serious bishoy hole serious ar respectful
-        hoye jao. Jokhon user kono action chay (app kholo, call koro, delete koro etc),
-        shudhu ekta clear, short response dao — ki korte hocche seta bolo, extra explanation
-        na diye.
+        Tum RUDRA ho, Arjun ke personal AI voice assistant. Casual, desi, dost jaise
+        tone mein Hindi/Hinglish mein baat karo. Serious topic ho to serious aur
+        respectful ho jao. Jab user koi action chahe (app kholo, call karo, delete
+        karo etc), sirf ek clear, short response do — kya ho raha hai wo batao, extra
+        explanation na do.
     """.trimIndent()
 
     suspend fun ask(userUtterance: String, conversationHistory: List<Pair<String, String>> = emptyList()): String =
         withContext(Dispatchers.IO) {
             val apiKey = ApiKeyProvider.get(context)
-                ?: return@withContext "Arjun, AI API key ta configure kora hoyni. Settings e giye seta boshiye dao."
+                ?: return@withContext "Arjun, AI API key configure nahi hui. Settings mein jaake use daal do."
 
             try {
                 val messages = JSONArray().apply {
@@ -75,7 +68,7 @@ class AIManager(private val context: Context) {
                     .getJSONObject("message")
                     .getString("content")
             } catch (e: Exception) {
-                "Arjun, AI-r shathe connect korte parlam na — internet ba API key check koro."
+                "Arjun, AI se connect nahi kar paya — internet ya API key check karo."
             }
         }
 }
