@@ -5,12 +5,6 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import java.util.Locale
 
-/**
- * Text-to-Speech for RUDRA's replies.
- * Falls back to English locale if Bengali TTS voice isn't installed on the device
- * (many Android phones ship without a Bengali TTS voice by default — RUDRA should
- * tell the user this rather than silently going quiet).
- */
 class TTSManager(
     context: Context,
     private val onSpeakStart: () -> Unit = {},
@@ -18,16 +12,16 @@ class TTSManager(
 ) {
     private var tts: TextToSpeech? = null
     private var ready = false
-    private var bengaliAvailable = false
+    private var hindiAvailable = false
 
     init {
         tts = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
                 ready = true
-                val bnResult = tts?.setLanguage(Locale("bn", "IN"))
-                bengaliAvailable = bnResult != TextToSpeech.LANG_MISSING_DATA &&
-                    bnResult != TextToSpeech.LANG_NOT_SUPPORTED
-                if (!bengaliAvailable) {
+                val hiResult = tts?.setLanguage(Locale("hi", "IN"))
+                hindiAvailable = hiResult != TextToSpeech.LANG_MISSING_DATA &&
+                    hiResult != TextToSpeech.LANG_NOT_SUPPORTED
+                if (!hindiAvailable) {
                     tts?.setLanguage(Locale.ENGLISH)
                 }
                 tts?.setSpeechRate(1.0f)
@@ -45,7 +39,7 @@ class TTSManager(
         tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "rudra_utt_${System.currentTimeMillis()}")
     }
 
-    fun isBengaliVoiceAvailable(): Boolean = bengaliAvailable
+    fun isHindiVoiceAvailable(): Boolean = hindiAvailable
 
     fun shutdown() {
         tts?.stop()
