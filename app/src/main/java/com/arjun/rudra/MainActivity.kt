@@ -3,7 +3,6 @@ package com.arjun.rudra
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -20,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
+import com.arjun.rudra.ai.ApiKeyProvider
 import com.arjun.rudra.command.CommandRouter
 import com.arjun.rudra.command.RouterOutcome
 import com.arjun.rudra.manager.PermissionManager
@@ -39,10 +39,11 @@ class MainActivity : ComponentActivity() {
     private var transcript by mutableStateOf("")
     private var reply by mutableStateOf("Hey Rudra bolo, ba niche button e chepo.")
     private var pendingConfirm by mutableStateOf<(suspend () -> RouterOutcome)?>(null)
+    private var showSettings by mutableStateOf(false)
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { /* results handled ad-hoc when a command actually needs one */ }
+    ) { }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,8 +61,6 @@ class MainActivity : ComponentActivity() {
             onPartial = { partial -> transcript = partial }
         )
 
-        // Request the core permission set up front; individual commands re-check
-        // and explain if something specific is still missing later.
         val missing = PermissionManager.missing(this)
         if (missing.isNotEmpty()) permissionLauncher.launch(missing.toTypedArray())
 
@@ -96,8 +95,6 @@ class MainActivity : ComponentActivity() {
             is RouterOutcome.NeedsDisambiguation -> {
                 reply = outcome.prompt
                 ttsManager.speak(outcome.prompt)
-                // A full picker UI is the natural next step here; for now the
-                // options are surfaced in `reply` so the flow isn't a dead end.
             }
         }
     }
@@ -136,7 +133,15 @@ class MainActivity : ComponentActivity() {
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Spacer(Modifier.height(32.dp))
+                        Spacer(Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            TextButton(onClick = { showSettings = true }) {
+                                Text("⚙ Settings", color = Color(0xFF8A93A8))
+                            }
+                        }
                         Text(
                             "R U D R A",
                             color = Color(0xFF5B8CFF),
@@ -192,8 +197,43 @@ class MainActivity : ComponentActivity() {
                         Spacer(Modifier.height(32.dp))
                     }
                 }
+
+                if (showSettings) {
+                    SettingsDialog(onDismiss = { showSettings = false })
+                }
             }
         }
+    }
+
+    @Composable
+    private fun SettingsDialog(onDismiss: () -> Unit) {
+        var keyInput by remember { mutableStateOf(ApiKeyProvider.get(this) ?: "") }
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("AI API Key") },
+            text = {
+                Column {
+                    Text("OpenAI (ba compatible) API key ta boshao — eta sudhu casual chat / free-form command er jonno lagbe.")
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = keyInput,
+                        onValueChange = { keyInput = it },
+                        label = { Text("API Key") },
+                        singleLine = true
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    ApiKeyProvider.set(this, keyInput.trim())
+                    reply = "API key save hoye geche."
+                    onDismiss()
+                }) { Text("Save") }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = onDismiss) { Text("Cancel") }
+            }
+        )
     }
 
     private fun stateLabel(): String = when (state) {
