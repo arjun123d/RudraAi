@@ -6,17 +6,7 @@ import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
-import java.util.Locale
 
-/**
- * Speech-to-Text using Android's built-in SpeechRecognizer.
- *
- * Note on language: bn-BD / bn-IN gives best results for pure Bengali.
- * For Banglish/Hinglish mixed speech, on-device recognizers are inconsistent —
- * this is exactly where routing the raw utterance to a cloud AI model (see
- * AIManager) for intent understanding, rather than relying on exact STT
- * text matching, pays off.
- */
 class SpeechManager(
     private val context: Context,
     private val onResult: (String) -> Unit,
@@ -25,9 +15,9 @@ class SpeechManager(
 ) {
     private var recognizer: SpeechRecognizer? = null
 
-    fun startListening(languageTag: String = "bn-IN") {
+    fun startListening(languageTag: String = "hi-IN") {
         if (!SpeechRecognizer.isRecognitionAvailable(context)) {
-            onError("Ei device e speech recognition available na.")
+            onError("Is device mein speech recognition available nahi hai.")
             return
         }
         recognizer?.destroy()
@@ -76,10 +66,10 @@ class SpeechManager(
     }
 
     private fun errorText(code: Int): String = when (code) {
-        SpeechRecognizer.ERROR_NETWORK -> "Network problem hocche."
-        SpeechRecognizer.ERROR_NO_MATCH -> "Kichu bujhte parlam na, abar bolo."
-        SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "Kono kotha shunte pelam na."
-        SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Microphone permission nei."
-        else -> "Recognition e ekta problem hoyeche."
+        SpeechRecognizer.ERROR_NETWORK -> "Network problem ho raha hai."
+        SpeechRecognizer.ERROR_NO_MATCH -> "Kuch samajh nahi aaya, dobara bolo."
+        SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "Koi awaaz nahi sunayi di."
+        SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Microphone permission nahi hai."
+        else -> "Recognition mein ek problem hui."
     }
 }
