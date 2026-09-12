@@ -8,7 +8,6 @@ import com.arjun.rudra.model.ParsedCommand
 import com.arjun.rudra.model.RiskLevel
 import com.arjun.rudra.model.Tool
 
-/** What CommandRouter wants the UI layer to do next. */
 sealed class RouterOutcome {
     data class Speak(val text: String) : RouterOutcome()
     data class NeedsConfirmation(val prompt: String, val onConfirm: suspend () -> RouterOutcome) : RouterOutcome()
@@ -49,17 +48,17 @@ class CommandRouter(private val context: Context) {
         return when (cmd.tool) {
             Tool.OPEN_APP -> {
                 val ok = cmd.argument != null && appLauncher.openApp(cmd.argument)
-                RouterOutcome.Speak(if (ok) "Achha, kholchi." else "$userName, ei app-ta khunje pelam na ba install nei.")
+                RouterOutcome.Speak(if (ok) "Theek hai, khol raha hoon." else "$userName, ye app nahi mila ya install nahi hai.")
             }
 
             Tool.SEARCH_WEB -> {
                 appLauncher.searchWeb(cmd.argument.orEmpty())
-                RouterOutcome.Speak("Search korchi.")
+                RouterOutcome.Speak("Search kar raha hoon.")
             }
 
             Tool.SEARCH_YOUTUBE -> {
                 appLauncher.searchYouTube(cmd.argument.orEmpty())
-                RouterOutcome.Speak("YouTube e search korchi.")
+                RouterOutcome.Speak("YouTube par search kar raha hoon.")
             }
 
             Tool.CALL_CONTACT -> handleCall(cmd.argument)
@@ -73,7 +72,7 @@ class CommandRouter(private val context: Context) {
                 } else {
                     val number = callManager.mostRecentNumber()
                     if (number == null) {
-                        RouterOutcome.Speak("$userName, recent call history khunje pelam na.")
+                        RouterOutcome.Speak("$userName, recent call history nahi mili.")
                     } else if (!PermissionManager.has(context, Manifest.permission.CALL_PHONE)) {
                         RouterOutcome.NeedsPermission(
                             Manifest.permission.CALL_PHONE,
@@ -81,37 +80,37 @@ class CommandRouter(private val context: Context) {
                         )
                     } else {
                         callManager.call(number)
-                        RouterOutcome.Speak("Achha re, call korchi.")
+                        RouterOutcome.Speak("Theek hai, call kar raha hoon.")
                     }
                 }
             }
 
-            Tool.BATTERY_STATUS -> RouterOutcome.Speak("Battery ekhon ${deviceTools.batteryPercent()} percent.")
-            Tool.GET_TIME -> RouterOutcome.Speak("Ekhon shomoy ${deviceTools.currentTimeText()}.")
-            Tool.GET_DATE -> RouterOutcome.Speak("Aajke ${deviceTools.currentDateText()}.")
+            Tool.BATTERY_STATUS -> RouterOutcome.Speak("Battery abhi ${deviceTools.batteryPercent()} percent hai.")
+            Tool.GET_TIME -> RouterOutcome.Speak("Abhi samay ${deviceTools.currentTimeText()} hai.")
+            Tool.GET_DATE -> RouterOutcome.Speak("Aaj ${deviceTools.currentDateText()} hai.")
 
             Tool.FLASHLIGHT_ON -> RouterOutcome.Speak(
-                if (deviceTools.setFlashlight(true)) "Flashlight on kore dilam." else "Flashlight chalate parlam na."
+                if (deviceTools.setFlashlight(true)) "Flashlight on kar diya." else "Flashlight chala nahi paya."
             )
             Tool.FLASHLIGHT_OFF -> RouterOutcome.Speak(
-                if (deviceTools.setFlashlight(false)) "Flashlight bondho kore dilam." else "Flashlight bondho korte parlam na."
+                if (deviceTools.setFlashlight(false)) "Flashlight band kar diya." else "Flashlight band nahi kar paya."
             )
 
-            Tool.VOLUME_UP -> { deviceTools.adjustVolume(true); RouterOutcome.Speak("Volume barhiye dilam.") }
-            Tool.VOLUME_DOWN -> { deviceTools.adjustVolume(false); RouterOutcome.Speak("Volume komiye dilam.") }
+            Tool.VOLUME_UP -> { deviceTools.adjustVolume(true); RouterOutcome.Speak("Volume badha diya.") }
+            Tool.VOLUME_DOWN -> { deviceTools.adjustVolume(false); RouterOutcome.Speak("Volume kam kar diya.") }
 
             Tool.LOCK_DEVICE -> RouterOutcome.Speak(
-                if (deviceTools.lockDeviceIfAdmin()) "Phone lock kore dilam."
-                else "$userName, lock korte amake Device Admin permission dite hobe Settings theke."
+                if (deviceTools.lockDeviceIfAdmin()) "Phone lock kar diya."
+                else "$userName, lock karne ke liye mujhe Settings se Device Admin permission deni hogi."
             )
 
-            Tool.UNKNOWN -> RouterOutcome.Speak("Bujhte parlam na, abar ekbar bolo?")
+            Tool.UNKNOWN -> RouterOutcome.Speak("Samajh nahi paya, dobara bolo?")
         }
     }
 
     private fun handleCall(nameOrLabel: String?): RouterOutcome {
         if (nameOrLabel.isNullOrBlank()) {
-            return RouterOutcome.Speak("$userName, kake call korbo bolo.")
+            return RouterOutcome.Speak("$userName, kisko call karoon bolo.")
         }
         if (!PermissionManager.has(context, Manifest.permission.READ_CONTACTS)) {
             return RouterOutcome.NeedsPermission(
@@ -121,11 +120,11 @@ class CommandRouter(private val context: Context) {
         }
         return when (val resolution = contactManager.resolve(nameOrLabel)) {
             is ContactResolution.NotFound ->
-                RouterOutcome.Speak("\"$nameOrLabel\" naam-e kono contact pachchhi na.")
+                RouterOutcome.Speak("\"$nameOrLabel\" naam ka koi contact nahi mila.")
 
             is ContactResolution.Ambiguous -> {
-                val names = resolution.candidates.joinToString(" na ") { it.displayName }
-                RouterOutcome.NeedsDisambiguation("$names — konta?", resolution.candidates)
+                val names = resolution.candidates.joinToString(" ya ") { it.displayName }
+                RouterOutcome.NeedsDisambiguation("$names — kaunsa?", resolution.candidates)
             }
 
             is ContactResolution.Found -> {
@@ -136,7 +135,7 @@ class CommandRouter(private val context: Context) {
                     )
                 }
                 callManager.call(resolution.contact.phoneNumber)
-                RouterOutcome.Speak("Achha re, ${resolution.contact.displayName}-ke call lagachhi.")
+                RouterOutcome.Speak("Theek hai, ${resolution.contact.displayName} ko call laga raha hoon.")
             }
         }
     }
@@ -149,11 +148,11 @@ class CommandRouter(private val context: Context) {
             )
         }
         callManager.call(contact.phoneNumber)
-        return RouterOutcome.Speak("Achha re, ${contact.displayName}-ke call lagachhi.")
+        return RouterOutcome.Speak("Theek hai, ${contact.displayName} ko call laga raha hoon.")
     }
 
     private fun confirmationPrompt(cmd: ParsedCommand): String = when (cmd.tool) {
-        Tool.LOCK_DEVICE -> "$userName, phone ta lock kore dibo? Confirm koro."
-        else -> "$userName, eta confirm koro."
+        Tool.LOCK_DEVICE -> "$userName, phone lock kar doon? Confirm karo."
+        else -> "$userName, ise confirm karo."
     }
 }
