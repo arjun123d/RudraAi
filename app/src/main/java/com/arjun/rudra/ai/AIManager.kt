@@ -13,12 +13,7 @@ import java.net.URL
  * CommandParser's keyword matching can't confidently classify (multi-step
  * commands, casual chat, ambiguous phrasing).
  *
- * SECURITY: the API key is intentionally NOT hardcoded here. Configure it via
- * one of:
- *   - local.properties -> BuildConfig field (recommended for dev), or
- *   - EncryptedSharedPreferences set from a Settings screen at runtime
- *     (recommended so Arjun can rotate the key without rebuilding the app).
- * Wire whichever you pick into ApiKeyProvider.get(context) below.
+ * Using Groq's free API (OpenAI-compatible format) with the Llama 3.3 model.
  */
 object ApiKeyProvider {
     fun get(context: Context): String? {
@@ -34,9 +29,7 @@ object ApiKeyProvider {
 
 class AIManager(private val context: Context) {
 
-    // Any OpenAI-compatible chat-completions endpoint works here (OpenAI, or
-    // a compatible proxy). Swap the URL/body shape if you use a different provider.
-    private val endpoint = "https://api.openai.com/v1/chat/completions"
+    private val endpoint = "https://api.groq.com/openai/v1/chat/completions"
 
     private val systemPrompt = """
         Tumi RUDRA, Arjun-er personal AI voice assistant. Casual, desi, bondhu-shulov
@@ -60,7 +53,7 @@ class AIManager(private val context: Context) {
                     put(JSONObject().put("role", "user").put("content", userUtterance))
                 }
                 val body = JSONObject().apply {
-                    put("model", "gpt-4o-mini")
+                    put("model", "llama-3.3-70b-versatile")
                     put("messages", messages)
                     put("max_tokens", 300)
                 }
