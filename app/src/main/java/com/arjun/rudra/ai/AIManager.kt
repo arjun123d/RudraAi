@@ -53,7 +53,7 @@ class AIManager(private val context: Context) {
                     put(JSONObject().put("role", "user").put("content", userUtterance))
                 }
                 val body = JSONObject().apply {
-                    put("model", "llama-3.3-70b-versatile")
+                    put("model", "openai/gpt-oss-120b")
                     put("messages", messages)
                     put("max_tokens", 300)
                 }
