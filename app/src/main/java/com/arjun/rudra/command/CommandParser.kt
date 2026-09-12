@@ -9,8 +9,11 @@ object CommandParser {
     private val appAliases = mapOf(
         "youtube" to "com.google.android.youtube",
         "यूट्यूब" to "com.google.android.youtube",
+        "युटुब" to "com.google.android.youtube",
+        "यूटुब" to "com.google.android.youtube",
         "instagram" to "com.instagram.android",
         "इंस्टाग्राम" to "com.instagram.android",
+        "इंस्टा" to "com.instagram.android",
         "chrome" to "com.android.chrome",
         "browser" to "com.android.chrome",
         "क्रोम" to "com.android.chrome",
@@ -38,15 +41,17 @@ object CommandParser {
             return ParsedCommand(Tool.CALL_CONTACT, name.ifBlank { null }, RiskLevel.LOW)
         }
 
-        openTriggers.firstOrNull { text.contains(it) }?.let {
+        val hasOpenTrigger = openTriggers.any { text.contains(it) }
+        if (hasOpenTrigger) {
             appAliases.entries.firstOrNull { (alias, _) -> text.contains(alias) }?.let { (_, pkg) ->
                 return ParsedCommand(Tool.OPEN_APP, pkg, RiskLevel.LOW)
             }
         }
 
-        val hasYoutube = text.contains("youtube") || text.contains("यूट्यूब")
+        val youtubeWords = listOf("youtube", "यूट्यूब", "युटुब", "यूटुब")
+        val hasYoutube = youtubeWords.any { text.contains(it) }
         if (hasYoutube && searchTriggers.any { text.contains(it) }) {
-            val query = extractSearchQuery(text, listOf("youtube", "यूट्यूब"))
+            val query = extractSearchQuery(text, youtubeWords)
             return ParsedCommand(Tool.SEARCH_YOUTUBE, query, RiskLevel.LOW)
         }
 
@@ -88,6 +93,6 @@ object CommandParser {
     }
 
     private val callTriggers = listOf("call kar", "call de", "phone kar", "call my", "call ", "कॉल कर", "फोन कर", "को कॉल")
-    private val openTriggers = listOf("kholo", "khol", "open", "chalao", "chala", "खोलो", "खोल", "चलाओ")
+    private val openTriggers = listOf("kholo", "khol", "open", "chalao", "chala", "खोलो", "खोल", "चलाओ", "ओपन", "ओपेन")
     private val searchTriggers = listOf("search kar", "search de", "search", "सर्च कर", "सर्च")
 }
