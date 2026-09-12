@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">RUDRA AI</string>
+    <string name="accessibility_service_description">RUDRA ko screen dekh kar automatic kaam karne dijiye — jaise YouTube video khojna aur play karna.</string>
 </resources>
