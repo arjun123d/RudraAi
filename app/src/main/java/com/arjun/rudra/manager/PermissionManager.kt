@@ -22,14 +22,13 @@ object PermissionManager {
     fun missing(context: Context): List<String> =
         ALL_REQUIRED.filter { !has(context, it) }
 
-    /** Human-readable Bengali/Banglish explanation shown when a command needs a missing permission. */
     fun explainMissing(permission: String): String = when (permission) {
-        Manifest.permission.RECORD_AUDIO -> "Arjun, kotha shonar jonno amar Microphone permission lagbe."
-        Manifest.permission.READ_CONTACTS -> "Arjun, contact khuje call korte amar Contacts permission lagbe."
-        Manifest.permission.CALL_PHONE -> "Arjun, call korte amar Phone permission lagbe."
-        Manifest.permission.READ_CALL_LOG -> "Arjun, recent call dekhte amar Call Log permission lagbe."
-        Manifest.permission.CAMERA -> "Arjun, flashlight chalate Camera permission lagbe."
-        Manifest.permission.POST_NOTIFICATIONS -> "Arjun, background e thakte notification permission lagbe."
-        else -> "Arjun, eta korte ekta extra permission lagbe."
+        Manifest.permission.RECORD_AUDIO -> "Baat sunne ke liye mujhe Microphone permission chahiye."
+        Manifest.permission.READ_CONTACTS -> "Contact dhundh kar call karne ke liye Contacts permission chahiye."
+        Manifest.permission.CALL_PHONE -> "Call karne ke liye Phone permission chahiye."
+        Manifest.permission.READ_CALL_LOG -> "Recent call dekhne ke liye Call Log permission chahiye."
+        Manifest.permission.CAMERA -> "Flashlight chalane ke liye Camera permission chahiye."
+        Manifest.permission.POST_NOTIFICATIONS -> "Background mein rehne ke liye notification permission chahiye."
+        else -> "Ye karne ke liye ek extra permission chahiye."
     }
 }
