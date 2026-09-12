@@ -4,90 +4,90 @@ import com.arjun.rudra.model.ParsedCommand
 import com.arjun.rudra.model.RiskLevel
 import com.arjun.rudra.model.Tool
 
-/**
- * Fast, offline, keyword-based parser for common Bengali/Banglish/Hindi/English phrasings.
- * This handles the majority of simple single-step commands without needing a network call.
- *
- * Anything it can't confidently classify comes back as Tool.UNKNOWN with the raw text as
- * argument — CommandRouter then hands that off to AIManager for real natural-language
- * intent resolution (needed for the multi-step / free-form cases from the spec).
- */
 object CommandParser {
 
     private val appAliases = mapOf(
         "youtube" to "com.google.android.youtube",
+        "यूट्यूब" to "com.google.android.youtube",
         "instagram" to "com.instagram.android",
+        "इंस्टाग्राम" to "com.instagram.android",
         "chrome" to "com.android.chrome",
         "browser" to "com.android.chrome",
+        "क्रोम" to "com.android.chrome",
+        "ब्राउज़र" to "com.android.chrome",
         "maps" to "com.google.android.apps.maps",
+        "मैप" to "com.google.android.apps.maps",
         "camera" to "com.android.camera",
+        "कैमरा" to "com.android.camera",
         "settings" to "com.android.settings",
-        "whatsapp" to "com.whatsapp"
+        "सेटिंग्स" to "com.android.settings",
+        "whatsapp" to "com.whatsapp",
+        "व्हाट्सएप" to "com.whatsapp"
     )
 
     fun parse(rawUtterance: String): ParsedCommand {
         val text = rawUtterance.lowercase().trim()
         if (text.isEmpty()) return ParsedCommand(Tool.UNKNOWN)
 
-        // "call <name>"
         callTriggers.firstOrNull { text.contains(it) }?.let { trigger ->
-            val name = text.substringAfter(trigger).trim().removeSuffix("kor").removeSuffix("de").trim()
-            if (text.contains("recent") || text.contains("last")) {
+            val name = text.substringAfter(trigger).trim()
+                .removeSuffix("karo").removeSuffix("kar do").removeSuffix("को").trim()
+            if (text.contains("recent") || text.contains("last") || text.contains("पिछला")) {
                 return ParsedCommand(Tool.CALL_RECENT_CONTACT, name, RiskLevel.LOW)
             }
             return ParsedCommand(Tool.CALL_CONTACT, name.ifBlank { null }, RiskLevel.LOW)
         }
 
-        // "open/kholo/chalao <app>"
         openTriggers.firstOrNull { text.contains(it) }?.let {
-            appAliases.entries.firstOrNull { (alias, _) -> text.contains(alias) }?.let { (alias, pkg) ->
+            appAliases.entries.firstOrNull { (alias, _) -> text.contains(alias) }?.let { (_, pkg) ->
                 return ParsedCommand(Tool.OPEN_APP, pkg, RiskLevel.LOW)
             }
         }
 
-        if (text.contains("youtube") && searchTriggers.any { text.contains(it) }) {
-            val query = extractSearchQuery(text, "youtube")
+        val hasYoutube = text.contains("youtube") || text.contains("यूट्यूब")
+        if (hasYoutube && searchTriggers.any { text.contains(it) }) {
+            val query = extractSearchQuery(text, listOf("youtube", "यूट्यूब"))
             return ParsedCommand(Tool.SEARCH_YOUTUBE, query, RiskLevel.LOW)
         }
 
         if (searchTriggers.any { text.contains(it) }) {
-            val query = extractSearchQuery(text, null)
+            val query = extractSearchQuery(text, emptyList())
             return ParsedCommand(Tool.SEARCH_WEB, query, RiskLevel.LOW)
         }
 
-        if (text.contains("battery")) return ParsedCommand(Tool.BATTERY_STATUS)
-        if (text.contains("time") || text.contains("shomoy")) return ParsedCommand(Tool.GET_TIME)
-        if (text.contains("date") || text.contains("tarikh")) return ParsedCommand(Tool.GET_DATE)
+        if (text.contains("battery") || text.contains("बैटरी")) return ParsedCommand(Tool.BATTERY_STATUS)
+        if (text.contains("time") || text.contains("samay") || text.contains("समय")) return ParsedCommand(Tool.GET_TIME)
+        if (text.contains("date") || text.contains("तारीख")) return ParsedCommand(Tool.GET_DATE)
 
-        if (text.contains("flashlight") || text.contains("torch")) {
-            return if (text.contains("off") || text.contains("bondho")) {
+        if (text.contains("flashlight") || text.contains("torch") || text.contains("टॉर्च") || text.contains("फ्लैश")) {
+            return if (text.contains("off") || text.contains("band") || text.contains("बंद")) {
                 ParsedCommand(Tool.FLASHLIGHT_OFF)
             } else {
                 ParsedCommand(Tool.FLASHLIGHT_ON)
             }
         }
 
-        if (text.contains("volume")) {
-            return if (text.contains("kome") || text.contains("down") || text.contains("komao")) {
+        if (text.contains("volume") || text.contains("आवाज़") || text.contains("वॉल्यूम")) {
+            return if (text.contains("kam") || text.contains("down") || text.contains("कम")) {
                 ParsedCommand(Tool.VOLUME_DOWN)
             } else {
                 ParsedCommand(Tool.VOLUME_UP)
             }
         }
 
-        if (text.contains("lock")) return ParsedCommand(Tool.LOCK_DEVICE, risk = RiskLevel.DESTRUCTIVE)
+        if (text.contains("lock") || text.contains("लॉक")) return ParsedCommand(Tool.LOCK_DEVICE, risk = RiskLevel.DESTRUCTIVE)
 
         return ParsedCommand(Tool.UNKNOWN, rawUtterance)
     }
 
-    private fun extractSearchQuery(text: String, platform: String?): String {
+    private fun extractSearchQuery(text: String, platformWords: List<String>): String {
         var q = text
         searchTriggers.forEach { q = q.replace(it, "") }
-        if (platform != null) q = q.replace(platform, "")
+        platformWords.forEach { q = q.replace(it, "") }
         return q.trim()
     }
 
-    private val callTriggers = listOf("call kor", "call de", "phone kor", "call my", "call ")
-    private val openTriggers = listOf("kholo", "khol", "open", "chalao", "chala")
-    private val searchTriggers = listOf("search kor", "search de", "search")
+    private val callTriggers = listOf("call kar", "call de", "phone kar", "call my", "call ", "कॉल कर", "फोन कर", "को कॉल")
+    private val openTriggers = listOf("kholo", "khol", "open", "chalao", "chala", "खोलो", "खोल", "चलाओ")
+    private val searchTriggers = listOf("search kar", "search de", "search", "सर्च कर", "सर्च")
 }
